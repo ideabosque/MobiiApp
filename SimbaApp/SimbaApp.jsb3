@@ -1,0 +1,72 @@
+{
+    "projectName": "SimbaApp",
+    "licenseText": "Copyright (c) 2011, Mobiiapp, Inc. All rights reserved",
+    "packages": [
+		{
+            "name"  : "App",
+            "target": "pkgs/app.min.js",
+            "id"    : "simbaapp_app",
+            "files" : [
+                {"path": "app/",           "name": "app.js"}
+            ]
+        },
+        {
+            "name"  : "Plugins",
+            "target": "pkgs/plugins/plugins.min.js",
+            "id"    : "simbaapp_plugins",
+            "files" : [
+                {"path": "app/plugins/",           "name": "Ext.ux.DimGridPanel.js"},
+				{"path": "app/plugins/",           "name": "Ext.ux.FactGridPanel.js"},
+				{"path": "app/plugins/",           "name": "Ext.ux.SimbaStore.js"},
+				{"path": "app/plugins/",           "name": "Ext.form.ux.touch.MultiSelect.js"},
+				{"path": "app/plugins/",           "name": "Ext.ux.ImageViewer.js"},
+				{"path": "app/plugins/",           "name": "markercluster.js"},
+				{"path": "app/plugins/",           "name": "Ext.form.ux.touch.ColorPickerField.js"},
+            ]
+        },
+		{
+            "name"  : "ModelStore",
+            "target": "pkgs/modelstore/modelstore.min.js",
+            "id"    : "simbaapp_modelstore",
+            "files" : [
+                {"path": "app/models/",           "name": "models.js"},
+				{"path": "app/stores/",           "name": "stores.js"}
+            ]
+        },
+        {
+            "name"  : "Simba Views",
+            "target": "pkgs/views/simbaviews.min.js",
+            "id"    : "simbaapp_views",
+            "files" : [
+                {"path": "app/views/",           "name": "Viewport.js"},
+                {"path": "app/views/",           "name": "OfflineView.js"},
+				{"path": "app/views/",           "name": "Navigation.js"},
+				{"path": "app/views/",           "name": "LoginForm.js"},
+				{"path": "app/views/",           "name": "SimbaPage.js"},
+				{"path": "app/views/",           "name": "SimbaReport.js"},
+				{"path": "app/views/",           "name": "SimbaTable.js"},
+				{"path": "app/views/",           "name": "SimbaPivotTable.js"},
+				{"path": "app/views/",           "name": "SimbaChart.js"},
+				{"path": "app/views/",           "name": "SimbaMap.js"},
+				{"path": "app/views/",           "name": "SimbaReportEditor.js"},
+				{"path": "app/views/",           "name": "Support.js"},
+            ]
+        }
+    ],
+    "builds": [
+        {
+            "name": "Simba App",
+            "target": "mobiiapp.js",
+            "debug": true,
+            "options": {
+              "minVersion": 1.1
+           },
+            "packages": [
+				"simbaapp_app",
+                "simbaapp_plugins",
+				"simbaapp_modelstore",
+                "simbaapp_views"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+<metadata>
+    <schema schemaDesc="CDP Waterfall DESC" schemaName="CDP Waterfall">
+        <column nullable="1" dataType="integer" columnName="Cycle Yr Num" columnDesc="Cycle Yr Num" aggregateable="Other" columnAlias="Time" aggrRule="none">
+            <drillColumn columnName="A" weight="1"/>
+            <table position="2" tableName="A"/>
+            <dimColumn columnName="A"/>
+        </column>
+        <column nullable="1" dataType="integer" columnName="CRD QTR" columnDesc="Fiscal Yyyyq Num" aggregateable="Other" columnAlias="Time" aggrRule="none">
+            <drillColumn columnName="B" weight="1"/>
+            <table position="2" tableName="B"/>
+            <dimColumn columnName="B"/>
+        </column>
+    </schema>
+    <schema schemaDesc="BDESC" schemaName="B">
+        <column nullable="1" dataType="integer" columnName="Cycle Yr Num" columnDesc="Cycle Yr Num" aggregateable="Other" columnAlias="Time" aggrRule="none">
+            <drillColumn columnName="A" weight="1"/>
+            <table position="2" tableName="A"/>
+            <dimColumn columnName="A"/>
+        </column>
+        <column nullable="1" dataType="integer" columnName="B" columnDesc="Fiscal Yyyyq Num" aggregateable="Other" columnAlias="B" aggrRule="none">
+            <drillColumn columnName="D" weight="1"/>
+            <table position="2" tableName="D"/>
+            <dimColumn columnName="D"/>
+        </column>
+    </schema>
+</metadata>

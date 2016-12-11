@@ -1,0 +1,28 @@
+{
+    "projectName": "SimbaApp",
+    "licenseText": "Copyright (c) 2011, Mobiiapp, Inc. All rights reserved",
+    "packages": [
+		{
+            "name"  : "androidPhoneGap",
+            "target": "pkgs/androidphonegap.min.js",
+            "id"    : "mobiiapp_androidphonegap",
+            "files" : [
+                {"path": "phonegap/android/",           "name": "cordova-1.9.0.js"},
+                {"path": "phonegap/android/plugins/",   "name": "screenshot.js"},
+            ]
+        }
+    ],
+    "builds": [
+        {
+            "name": "Simba App",
+            "target": "phonegap.android.js",
+            "debug": true,
+            "options": {
+              "minVersion": 1.1
+           },
+            "packages": [
+				"mobiiapp_androidphonegap"
+            ]
+        }
+    ]
+}

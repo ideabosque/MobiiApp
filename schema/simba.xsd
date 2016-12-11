@@ -1,0 +1,598 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2009 sp1 (http://www.altova.com) by Javier (EMBRACE) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="application">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="report" minOccurs="0"/>
+				<xs:element name="prompt" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="promptFilter" type="promptFilterType" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+						<xs:attribute name="scope"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element ref="page" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="appName" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="column">
+		<xs:complexType>
+			<xs:sequence minOccurs="0">
+				<xs:element name="dataFormat" minOccurs="0">
+					<xs:complexType>
+						<xs:attribute name="type"/>
+						<xs:attribute name="commas"/>
+						<xs:attribute name="negativeType"/>
+						<xs:attribute name="minDigits"/>
+						<xs:attribute name="maxDigits"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="navigation" type="nodeType" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="columnHeading" type="columnHeadingType" minOccurs="0"/>
+				<xs:element name="drillColumn" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:attribute name="tableName" use="required"/>
+						<xs:attribute name="columnName" use="required"/>
+						<xs:attribute name="weight"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="columnId" use="required"/>
+			<xs:attribute name="tableName"/>
+			<xs:attribute name="columName" use="optional"/>
+			<xs:attribute name="formula" use="required"/>
+			<xs:attribute name="interaction"/>
+			<xs:attribute name="visibility"/>
+			<xs:attribute name="suppress"/>
+			<xs:attribute name="type"/>
+			<xs:attribute name="measurePosition"/>
+			<xs:attribute name="edgeSeq"/>
+			<xs:attribute name="aggRule"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="columnRef">
+		<xs:complexType>
+			<xs:attribute name="columnID" use="required"/>
+			<xs:attribute name="total"/>
+			<xs:attribute name="direction"/>
+			<xs:attribute name="merge"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="expr">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="expr" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="exprType" use="required"/>
+			<xs:attribute name="op"/>
+			<xs:attribute name="exprValue"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="filter">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="expr" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="criteria">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="columns">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="column" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="columnOrder" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="columnRef" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element ref="filter" minOccurs="0"/>
+				<xs:element name="drillColumns" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="column" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="sql" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="name"/>
+			<xs:attribute name="schema" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="views">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="chart" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="pivotTable" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="columnSelector" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="selector" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="choice" minOccurs="0" maxOccurs="unbounded">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="navigation" type="nodeType" minOccurs="0" maxOccurs="unbounded"/>
+													<xs:element name="columnHeading" type="columnHeadingType"/>
+												</xs:sequence>
+												<xs:attribute name="formula" use="required"/>
+												<xs:attribute name="interaction"/>
+												<xs:attribute name="suppress"/>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="columnId" use="required"/>
+									<xs:attribute name="caption"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="name" use="required"/>
+						<xs:attribute name="caption"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="compoundView" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="cell" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="viewType" use="required"/>
+									<xs:attribute name="viewName" use="required"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="name" use="required"/>
+						<xs:attribute name="caption"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="viewSelector" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="viewItem" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:attribute name="viewName" use="required"/>
+									<xs:attribute name="viewType" use="required"/>
+									<xs:attribute name="caption"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="name" use="required"/>
+						<xs:attribute name="caption"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="narrativeView" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="prefix" minOccurs="0">
+								<xs:complexType/>
+							</xs:element>
+							<xs:element name="narrative" minOccurs="0">
+								<xs:complexType/>
+							</xs:element>
+							<xs:element name="rowCount" minOccurs="0">
+								<xs:complexType/>
+							</xs:element>
+							<xs:element name="rowSep" minOccurs="0">
+								<xs:complexType/>
+							</xs:element>
+							<xs:element name="postfix" minOccurs="0">
+								<xs:complexType/>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="name" use="required"/>
+						<xs:attribute name="caption"/>
+						<xs:attribute name="fmt"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element ref="tableView" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="spreadsheet" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="ssCorner" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element ref="entry" maxOccurs="unbounded"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="ssColumns" minOccurs="0">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element ref="ssColumn" maxOccurs="unbounded"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="ssRows">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element ref="ssRow" maxOccurs="unbounded"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="name" use="required"/>
+						<xs:attribute name="caption"/>
+						<xs:attribute name="criteriaName"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element ref="mapView" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="simba">
+		<xs:annotation>
+			<xs:documentation>Comment describing your root element</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="application"/>
+			</xs:sequence>
+			<xs:attribute name="cid" use="required"/>
+			<xs:attribute name="style" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="chart">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="categories" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="category" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element ref="column" minOccurs="0" maxOccurs="unbounded"/>
+									</xs:sequence>
+									<xs:attribute name="position" use="required"/>
+									<xs:attribute name="constant"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="interaction" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="navigation" type="nodeType" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+						<xs:attribute name="interactiontType" use="required"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="axesFormats" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="axisFormat" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="labels"/>
+									</xs:sequence>
+									<xs:attribute name="axis" use="optional"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="measures" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="column" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="seriesGenerators" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="column" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="gaugePointers" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="pointer" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element ref="column"/>
+									</xs:sequence>
+									<xs:attribute name="color"/>
+									<xs:attribute name="needleStyle"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="gaugeTitles" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="column" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+						<xs:attribute name="title"/>
+						<xs:attribute name="subTitle"/>
+						<xs:attribute name="footer"/>
+						<xs:attribute name="secFooter"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="gaugeScale" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="scaleMin">
+								<xs:complexType>
+									<xs:sequence minOccurs="0">
+										<xs:element ref="column" minOccurs="0"/>
+									</xs:sequence>
+									<xs:attribute name="type" use="required"/>
+									<xs:attribute name="value"/>
+									<xs:attribute name="default"/>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="scaleMax">
+								<xs:complexType>
+									<xs:sequence minOccurs="0">
+										<xs:element ref="column" minOccurs="0"/>
+									</xs:sequence>
+									<xs:attribute name="type" use="required"/>
+									<xs:attribute name="value"/>
+									<xs:attribute name="default"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="labelsDisplay"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="gaugeRanges" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="gaugeRange" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="rangeLow">
+											<xs:complexType>
+												<xs:sequence minOccurs="0">
+													<xs:element ref="column" minOccurs="0"/>
+												</xs:sequence>
+												<xs:attribute name="type" use="required"/>
+												<xs:attribute name="value"/>
+												<xs:attribute name="default"/>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="rangeHigh">
+											<xs:complexType>
+												<xs:sequence minOccurs="0">
+													<xs:element ref="column" minOccurs="0"/>
+												</xs:sequence>
+												<xs:attribute name="type" use="required"/>
+												<xs:attribute name="value"/>
+												<xs:attribute name="default"/>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="caption"/>
+									<xs:attribute name="type" use="required"/>
+									<xs:attribute name="color"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="gaugeTypeFormat" minOccurs="0">
+					<xs:complexType>
+						<xs:attribute name="type"/>
+						<xs:attribute name="arcLength"/>
+						<xs:attribute name="thickness"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="name" use="required"/>
+			<xs:attribute name="caption"/>
+			<xs:attribute name="chartType" use="required"/>
+			<xs:attribute name="subType"/>
+			<xs:attribute name="chartSize" use="optional"/>
+			<xs:attribute name="chartPosition"/>
+			<xs:attribute name="gaugeLegendLoc"/>
+			<xs:attribute name="gaugeDataLables"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="tableView">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="columnRef" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="name" use="required"/>
+			<xs:attribute name="caption"/>
+			<xs:attribute name="grandTotal"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="reportPrompt">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="promptFilter" type="promptFilterType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="report">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="criteria" maxOccurs="unbounded"/>
+				<xs:element ref="views" minOccurs="0"/>
+				<xs:element ref="reportPrompt" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="nodeType">
+		<xs:attribute name="cid" use="required"/>
+		<xs:attribute name="display"/>
+		<xs:attribute name="caption"/>
+	</xs:complexType>
+	<xs:complexType name="promptFilterType">
+		<xs:attribute name="formula" use="optional"/>
+		<xs:attribute name="schema" use="optional"/>
+		<xs:attribute name="op" use="optional"/>
+		<xs:attribute name="default" use="optional"/>
+		<xs:attribute name="defaultValue"/>
+		<xs:attribute name="defaultValue2"/>
+		<xs:attribute name="values"/>
+		<xs:attribute name="control" use="optional"/>
+		<xs:attribute name="includeAllChoices"/>
+		<xs:attribute name="constrainChoices"/>
+		<xs:attribute name="setVariable"/>
+		<xs:attribute name="setVariableValue"/>
+		<xs:attribute name="type" use="optional"/>
+		<xs:attribute name="caption"/>
+	</xs:complexType>
+	<xs:complexType name="columnHeadingType">
+		<xs:sequence>
+			<xs:element name="navigation" type="nodeType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="interaction" use="optional"/>
+		<xs:attribute name="captionText"/>
+	</xs:complexType>
+	<xs:element name="pivotTable">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="edge" maxOccurs="unbounded"/>
+				<xs:element ref="chart" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="name" use="required"/>
+			<xs:attribute name="caption"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="edge">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="column" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="measureLabels" minOccurs="0">
+					<xs:complexType>
+						<xs:attribute name="total"/>
+						<xs:attribute name="edgeSeq"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="axis" use="required"/>
+			<xs:attribute name="total"/>
+			<xs:attribute name="totalLabel"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="page">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="section" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="pagePrompt" type="nodeType" minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element name="pageReport" type="nodeType" minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element name="pageLink" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="navReport" minOccurs="0">
+											<xs:complexType>
+												<xs:attribute name="condition" use="required"/>
+												<xs:attribute name="path" use="required"/>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="name" use="required"/>
+									<xs:attribute name="type" use="required"/>
+									<xs:attribute name="destination" use="required"/>
+									<xs:attribute name="controllerId"/>
+									<xs:attribute name="caption"/>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="pageNavReport" minOccurs="0">
+								<xs:complexType>
+									<xs:attribute name="condition" use="required"/>
+									<xs:attribute name="path" use="required"/>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="pageHtml" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType/>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="name" use="required"/>
+						<xs:attribute name="caption"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="pageName"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="entry">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="cell" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:attribute name="name"/>
+						<xs:attribute name="value"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ssColumn">
+		<xs:complexType>
+			<xs:attribute name="group"/>
+			<xs:attribute name="parentGroup"/>
+			<xs:attribute name="headerName"/>
+			<xs:attribute name="headerValue"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ssRow">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="entry" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="group"/>
+			<xs:attribute name="parentGroup"/>
+			<xs:attribute name="headerName"/>
+			<xs:attribute name="headerValue"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="mapView">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="latitude" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="column"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="longitude" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="column"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element ref="seriesGenerators"/>
+				<xs:element name="location" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="column"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="name" use="required"/>
+			<xs:attribute name="caption"/>
+			<xs:attribute name="centerLatitude" use="required"/>
+			<xs:attribute name="centerLongitude" use="required"/>
+			<xs:attribute name="geocodeSource" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="seriesGenerators">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="column" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

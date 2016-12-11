@@ -1,0 +1,27 @@
+{
+    "projectName": "SimbaApp",
+    "licenseText": "Copyright (c) 2011, Mobiiapp, Inc. All rights reserved",
+    "packages": [
+		{
+            "name"  : "Sencha Touch",
+            "target": "sencha-touch-min.js",
+            "id"    : "sencha_touch_min",
+            "files" : [
+                {"path": "",           "name": "sencha-touch-debug.js"}
+            ]
+        }
+    ],
+    "builds": [
+        {
+            "name": "Simba App",
+            "target": "senchatouch.js",
+            "debug": true,
+            "options": {
+              "minVersion": 1.1
+           },
+            "packages": [
+				"sencha_touch_min"
+            ]
+        }
+    ]
+}

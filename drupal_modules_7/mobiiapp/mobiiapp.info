@@ -1,0 +1,6 @@
+; $Id$
+name = MobiiApp
+description = MobiiApp Catalog and MobiiApp Security.
+package = MOBIIAPP
+core = 7.x
+version = "7.x-0.1"

@@ -1,0 +1,7 @@
+; $Id$
+name = OBIEE10g Adaptor
+description = Manage OBIEE10g Adaptor.
+package = MOBIIAPP
+core = 7.x
+dependencies[] = mobiiapp
+version = "7.x-0.1"

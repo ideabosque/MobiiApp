@@ -1,0 +1,110 @@
+<?php
+
+/**
+* Implementation of hook_install().
+*/
+function mobiiapp_support_install() {
+	drupal_install_schema('mobiiapp_support_info');	
+}
+
+
+/**
+* Implementation of hook_uninstall().
+*/
+function mobiiapp_support_uninstall() {     	
+	drupal_uninstall_schema('mobiiapp_support_info');
+}
+
+/**
+* Implementation of hook_schema().
+*/
+function mobiiapp_support_schema() {
+	
+	
+    $schema['mobiiapp_support_info'] = array(
+	    'description' => t("Mobiiapp support information."),
+		'fields' => array(            
+		    'id' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+			'status' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("status."),
+			),
+			'subject' => array(
+				'type' => 'varchar',
+				'length' => 250,
+				'not null' => TRUE,
+				'description' => t("subject."),
+			),
+		    'detail' => array(
+                'description' => 'The detail for the subject.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+            ),		
+			'solution' => array(
+                'description' => 'The solution way.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+            ),	
+			'comments' => array(
+                'description' => 'Comments.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+            ),											
+			'history' => array(
+                'description' => 'The history information for operation.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+            ),	
+			'assign_to' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => FALSE,
+				'description' => t("Assign to the certain uid."),
+		    ),
+			'created_date' => array(
+				'description' => 'The created date.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+			),
+			'created_by' => array(
+				'description' => 'The uid created by.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+			),
+			'updated_date' => array(
+				'description' => 'The updated date.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+			),
+			'updated_by' => array(
+				'description' => 'The uid updated by.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+			),
+		),
+		'primary key' => array('id')
+	);
+
+	return $schema;
+}
+
+?>

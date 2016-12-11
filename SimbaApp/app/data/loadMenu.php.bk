@@ -1,0 +1,37 @@
+<?php
+$_SERVER['REMOTE_ADDR'] = 'localhost';
+$documentRoot = ($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : "/var/www/html";
+chdir($documentRoot);
+include_once "./includes/bootstrap.inc";
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
+function hasChildren($id){
+    $sql = "SELECT count(*) FROM advance_ui_list WHERE parent_id = ".$id;
+    return db_result(db_query($sql));
+}
+$output = array();
+function getChildren($parentId, $level){
+    $items = array();
+    $result = db_query('SELECT id, name, parent_id, control_id, controller, type FROM advance_ui_list WHERE parent_id='.$parentId);
+    $i = 0;
+    while ($row = db_fetch_array($result)) {   
+//        echo str_repeat('  ',$level).$row['name']."\n";   
+        $items[$i]['label'] = $row['name'];
+        $items[$i]['id'] = $row['id'];
+        $items[$i]['control_id'] = $row['control_id'];
+        $items[$i]['controller'] = $row['controller'];
+        $items[$i]['type'] = ($row['type'] == 'OBIEE Dashboard Page') ? 'page' : $row['type'];
+//        $items[$i]['items'] = getChildren($row['id'], $level+1); 
+        $subitems = getChildren($row['id'], $level+1);
+        if(empty($subitems) && $items[$i]['type'] != 'Folder'){
+            $items[$i]['leaf'] = true;
+        } else {
+            $items[$i]['items'] = $subitems;
+        } 
+        $i ++; 
+    }   
+    return $items;
+}
+
+$output = getChildren(0, 0);
+echo '{"items":'.json_encode($output).',"sessionid":'.json_encode($_SESSION['obieeClientArray']).'}';

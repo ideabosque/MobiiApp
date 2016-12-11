@@ -1,0 +1,269 @@
+<?php
+
+
+/**
+* Implementation of hook_install().
+*/
+function xdata_adaptor_install() {
+	drupal_install_schema('xdata_adaptor_page');
+	drupal_install_schema('xdata_adaptor_interface');
+	drupal_install_schema('xdata_adaptor_dataset');
+	
+	db_insert('mobiiapp_common')
+		->fields(
+			array(
+				'variable' => 'adaptor', 
+				'value' => 'xdata'
+			)
+		)
+		->execute();
+}
+
+
+/**
+* Implementation of hook_uninstall().
+*/
+function xdata_adaptor_uninstall() {
+	db_delete('mobiiapp_common')
+		->condition('variable', 'adaptor')
+		->condition('value', 'xdata')
+		->execute();
+	
+	drupal_uninstall_schema('xdata_adaptor_dataset');
+	drupal_uninstall_schema('xdata_adaptor_interface');
+	drupal_uninstall_schema('xdata_adaptor_page');		
+}
+
+
+/**
+* Implementation of hook_schema().
+*/
+function xdata_adaptor_schema() {
+	
+    $schema['xdata_adaptor_page'] = array(
+	    'description' => t("xData adaptor page information."),
+		'fields' => array(            
+		    'cid' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+			'fid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => FALSE,
+				'default' => 0,
+				'description' => t("Foreign key."),
+			),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'description' => t("name."),
+			),			
+			'type' => array(
+			    'description' => t("Type."),
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,
+			),	
+			'status' => array(
+                'description' => 'Boolean indicating whether the dashboard page simbaxml is generated .',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+			'in_page' => array(
+                'description' => 'Boolean indicating whether the report is in page.',
+                'type' => 'int',
+                'not null' => FALSE,
+            ),
+			'simbaxml' => array(
+				'type' => 'text',
+				'size' => 'big',
+				'not null' => FALSE,
+				'description' => t('Simba XMLs.'),
+			),
+			'dataset_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {xdata_adaptor_dataset}.id for datasets.',
+			),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {mobiiapp}.unit_id for units.',
+			),
+			'timestamp' => array(
+				'description' => 'The most recent time the item has been updated.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+			),
+		),
+		'primary key' => array('cid')
+	);
+	
+	$schema['xdata_adaptor_pages_units'] = array(
+		'fields' => array(
+			'cid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+		),
+		'primary key' => array('cid', 'unit_id'),
+	);
+	
+	$schema['xdata_adaptor_dataset'] = array(
+		'description' => 'Sql adaptor dataset information.',
+		'fields' => array(
+			'id' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("The name of dataset."),
+			),
+			'type' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("The type of dataset."),
+			),			
+			'path' => array(
+				'type' => 'varchar',
+				'length' => 250,
+				'description' => t("The path of the dataset."),
+			),
+			'schedule' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,
+				'description' => t("The refresh schedule of remote dataset."),
+			),
+			'sql_select' => array(
+                'description' => 'SQL Select.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+            ),
+			'sql_from' => array(
+                'description' => 'SQL From.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+            ),
+			'sql_where' => array(
+                'description' => 'SQL where.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+            ),
+			'timestamp' => array(
+				'description' => 'The most recent time the item has been updated.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+			),
+			'interface_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {sql_adaptor_interface}.id for interfaces.',
+			),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {mobiiapp}.unit_id for units.',
+			),
+			
+		),		
+		'primary key' => array('id'),
+	);
+	
+	$schema['xdata_adaptor_interface'] = array(
+		'description' => 'Sql adaptor interface information.',
+		'fields' => array(
+			'id' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("The name of connection."),
+			),
+			'type' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("The type of server."),
+			),
+			'connection_string' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("The connection string of the server."),
+			),			
+			'username' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,
+				'description' => t("Server Account Name."),
+			),
+			'passwd' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,
+				'description' => t("Server Account Password."),
+			),
+			'default_database' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,
+				'description' => t("Default Database."),
+			),
+			'access_token' => array(
+				'type' => 'varchar',
+				'length' => 250,
+				'not null' => FALSE,
+				'description' => t("Dropbox Access Token."),
+			),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {mobiiapp}.unit_id for units.',
+			),			
+		),		
+		'primary key' => array('id'),
+	);
+	
+	return $schema;
+}
+
+?>

@@ -1,0 +1,442 @@
+<?php
+
+/**
+* Implementation of hook_install().
+*/
+function mobiiapp_install() {
+	drupal_install_schema('mobiiapp_common');
+    drupal_install_schema('mobiiapp_catalog');
+	drupal_install_schema('mobiiapp_catalog_role');
+	drupal_install_schema('mobiiapp_catalog_comment');
+	// drupal_install_schema('utoken');
+	drupal_install_schema('mobiiapp_unit');
+	drupal_install_schema('mobiiapp_units_users');
+	db_query('create view mobiiapp_units_users_v as 
+				select u.uid, u.name, u.mail, u.status, mc.unit_id, mc.unit_name 
+				from users u, mobiiapp_unit mc, mobiiapp_units_users mcu 
+				where u.uid = mcu.uid 
+				and u.status = 1
+				and mc.unit_id = mcu.unit_id;');
+	drupal_install_schema('mobiiapp_bill');	
+	drupal_install_schema('mobiiapp_membership');
+	drupal_install_schema('mobiiapp_membership_history');
+	
+	$server = exec('hostname');
+	db_insert('mobiiapp_common')
+		->fields(
+			array(
+				'variable' => 'server', 
+				'value' => $server,
+			)
+		)
+		->execute();
+	
+	
+	// $path = '/var/www/html/sites/all/modules/mobiiapp/servers';
+	// $handle = fopen($path, "rb");
+	// $content = fread($handle, filesize($path));
+	// fclose($handle);
+	// $servers = explode("\n", trim($content));	
+	// foreach ($servers as $server) {
+		// db_insert('mobiiapp_common')
+			// ->fields(
+				// array(
+					// 'variable' => 'server', 
+					// 'value' => $server,
+				// )
+			// )
+			// ->execute();
+	// }
+	
+	$cmd = 'mkdir /var/www/html/sites/default/files/comment_images/';
+	exec($cmd);
+}
+
+
+/**
+* Implementation of hook_uninstall().
+*/
+function mobiiapp_uninstall() {
+	drupal_uninstall_schema('mobiiapp_membership_history');
+	drupal_uninstall_schema('mobiiapp_membership');     	
+	drupal_uninstall_schema('mobiiapp_bill');
+	db_query('drop view mobiiapp_units_users_v;');
+	drupal_uninstall_schema('mobiiapp_catalog_comment');
+	drupal_uninstall_schema('mobiiapp_catalog_role');
+	drupal_uninstall_schema('mobiiapp_catalog');
+	// drupal_uninstall_schema('utoken');
+	drupal_uninstall_schema('mobiiapp_units_users');
+	drupal_uninstall_schema('mobiiapp_unit');
+	drupal_uninstall_schema('mobiiapp_common');
+
+	$cmd = 'rm -Rf /var/www/html/sites/default/files/comment_images/';
+	exec($cmd);
+}
+
+/**
+* Implementation of hook_schema().
+*/
+function mobiiapp_schema() {
+	$schema['mobiiapp_common'] = array(
+		'description' => 'Common Table.',
+		'fields' => array(
+		    'variable' => array(
+			    'description' => t("The variable name."),
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,
+			),	
+			'value' => array(
+				'description' => t("The variable value."),
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,				
+			),							
+		),
+	);
+	
+    $schema['mobiiapp_catalog'] = array(
+	    'description' => t("Mobiiapp catalog information."),
+		'fields' => array(            
+		    'id' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'description' => t("name."),
+			),
+		    'parent_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'description' => t("Parent ID."),
+		    ),				
+			'type' => array(
+			    'description' => t("The Item Type."),
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,
+			),	
+			'adaptor' => array(
+				'description' => t("The adaptor module name."),
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,				
+			),											
+			'cid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'description' => t("Control ID from Controller."),
+		    ),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {unit}.unit_id.',
+			),
+			'status' => array(
+				'description' => 'Boolean indicating whether the dashboard page is active.',
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+		    ),
+			'weight' => array(
+				'description' => 'Weight of the element. Lighter weights are higher up, heavier weights go down.',
+				'type' => 'int',
+				'not null' => TRUE,
+			    'default' => 0,
+			),
+			'timestamp' => array(
+				'description' => 'The most recent time the item has been updated.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+			),
+		),
+		'primary key' => array('id')
+	);
+	
+	// $schema['utoken'] = array(
+		// 'description' => t("For SimbaApp login validation."),
+		// 'fields' => array(            
+			// 'uname' => array(
+				// 'type' => 'varchar',
+				// 'length' => 255,
+				// 'not null' => TRUE,
+				// 'description' => t("uname."),
+	        // ),
+			// 'token' => array(
+				// 'type' => 'varchar',
+				// 'length' => 255,
+				// 'not null' => TRUE,
+				// 'description' => t("token."),
+			// ),
+		// ),
+	    // 'primary key' => array('uname')
+	// );
+	
+	$schema['mobiiapp_catalog_role'] = array(
+		'description' => 'Maps roles.',
+		'fields' => array(
+		    'catalog_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {mobiiapp_catalog}.id.',
+			),
+			'rid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {role}.rid for role.',
+			),
+		),
+		'primary key' => array('catalog_id', 'rid'),
+		'indexes' => array(
+			'catalog_role' => array('catalog_id', 'rid'),
+	    ),
+	);
+	
+	$schema['mobiiapp_catalog_comment'] = array(
+		'description' => 'MobiiApp Catalog Comment.',
+		'fields' => array(
+			'id' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+		    'catalog_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'description' => '{mobiiapp_catalog}.id.',
+			),
+			'uid' => array(
+			   'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => '{users}.uid for user.',
+			),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 60,
+				'not null' => TRUE,
+				'description' => 'Primary Key: {users}.name for user.',
+			),
+			'comment' => array(
+                'description' => 'The comment for the page.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+            ),
+			'image' => array(
+				'type' => 'varchar',
+				'length' => 512,
+			),
+			'timestamp' => array(
+				'description' => 'The most recent time the item has been updated.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+		),
+		'primary key' => array('id'),
+		'indexes' => array(
+			'catalog_comment' => array('catalog_id', 'uid'),
+			'timestamp' => array('timestamp'),
+			'name' => array('name'),
+	    ),
+	);
+	
+	$schema['mobiiapp_unit'] = array(
+		'description' => 'Unit information.',
+		'fields' => array(
+			'unit_id' => array(
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'description' => t("Primary Key."),
+			),
+			'unit_name' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'description' => t("Unit name."),
+			),
+			'description' => array(
+				'description' => 'Description.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+			),
+			'address' => array(
+				'description' => 'address.',
+                'type' => 'text',
+				'size' => 'big',
+                'not null' => FALSE,
+			),
+			'web_site' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => FALSe,
+				'description' => t("Web Site."),
+			),
+		),
+		'primary key' => array('unit_id')
+	);
+
+	$schema['mobiiapp_units_users'] = array(
+		'description' => 'Maps users.',
+		'fields' => array(
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {unit}.unit_id.',
+			),
+			'uid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {users}.uid for user.',
+			),
+		),
+		'primary key' => array('unit_id', 'uid'),
+		'indexes' => array(
+			'uid' => array('uid'),
+		),
+	);
+	
+	$schema['mobiiapp_bill'] = array(
+		'description' => t("Mobiiapp Bill."),
+		'fields' => array(            
+			'bill_no' => array(
+				'type' => 'int',
+				'size' => 'big',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'description' => t("Primary Key."),
+			),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'brought_by' => array(
+				'type' => 'varchar',
+				'length' => 60,
+				'not null' => TRUE,
+			),
+			'item_value' => array(
+				'type' => 'float',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),	
+			'quantity' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'duration' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),	
+			'amount' => array(
+				'type' => 'float',
+				'size' => 'big',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'payment_status' => array(
+				'type' => 'varchar',
+				'length' => 50,
+			),
+			'payment_data' => array(
+                'type' => 'text',
+				'size' => 'big',
+			),
+		),
+		'primary key' => array('bill_no')
+	);
+	
+	$schema['mobiiapp_membership'] = array(
+		'description' => t("Mobiiapp Membership."),
+		'fields' => array(            
+			'membership_no' => array(
+				'type' => 'int',
+				'size' => 'big',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'description' => t("Primary Key."),
+			),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'assigned_to' => array(
+				'type' => 'varchar',
+				'length' => 60,
+				'not null' => FALSE,
+			),
+			'expired_date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+		),
+		'primary key' => array('membership_no')
+	);
+	
+	$schema['mobiiapp_membership_history'] = array(
+		'description' => t("Mobiiapp Membership History."),
+		'fields' => array(            
+			'membership_no' => array(
+				'type' => 'int',
+				'size' => 'big',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'bill_no' => array(
+				'type' => 'int',
+				'size' => 'big',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'subscribed_date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'expired_date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+		),
+		'primary key' => array('membership_no', 'bill_no')
+	);
+	
+	return $schema;
+}
+
+?>

@@ -1,0 +1,7 @@
+# E:\hazel-simba\new_version\SimbaApp\jsbuilder>JSBuilder.bat -p E:\hazel-simba\new_version\SimbaApp\SimbaApp.jsb3 -d E:\hazel-simba\new_version\SimbaApp\
+
+E:\hazel-simba\new_version\SimbaApp\jsbuilder>JSBuilder.bat -p ..\SimbaApp.jsb3 -d ..\
+
+E:\hazel-simba\new_version\SimbaApp\jsbuilder>JSBuilder.bat -p ..\MobiiApp.iOS.jsb3 -d ..\
+
+E:\hazel-simba\new_version\SimbaApp\jsbuilder>JSBuilder.bat -p ..\MobiiApp.Android.jsb3 -d ..\

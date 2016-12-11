@@ -1,0 +1,885 @@
+<?php
+
+require_once('mobiiapp.unit.inc');
+require_once('mobiiapp.security.inc');
+require_once('mobiiapp.catalog.inc');
+require_once('mobiiapp.membership.inc');
+require_once('mobiiapp.bill.inc');
+
+$GLOBALS['PLUGIN_ROOT'] = 'src';
+require_once $GLOBALS['PLUGIN_ROOT'].'/Thrift.php';
+require_once $GLOBALS['PLUGIN_ROOT'].'/protocol/TBinaryProtocol.php';
+require_once $GLOBALS['PLUGIN_ROOT'].'/transport/TSocket.php';
+require_once $GLOBALS['PLUGIN_ROOT'].'/transport/THttpClient.php';
+require_once $GLOBALS['PLUGIN_ROOT'].'/transport/TBufferedTransport.php';
+
+require_once $GLOBALS['PLUGIN_ROOT'].'/packages/metadataservice/MetadataService.php';
+require_once $GLOBALS['PLUGIN_ROOT'].'/packages/dataservice/DataService.php';
+require_once $GLOBALS['PLUGIN_ROOT'].'/packages/contentservice/ContentService.php';
+//global $metadata_client;
+//$metadata_client = metadataservice();
+global $metadata_client;
+$metadata_client = new MetadataClient();
+
+global $data_client;
+$data_client = new DataClient();
+
+global $content_client;
+$content_client = new ContentClient();
+
+require_once $GLOBALS['PLUGIN_ROOT'].'/PHPExcel.php';
+
+include_once $GLOBALS['PLUGIN_ROOT'].'/Dropbox/OAuth/Storage/StorageInterface.php';
+include_once $GLOBALS['PLUGIN_ROOT'].'/Dropbox/OAuth/Storage/Encrypter.php';
+include_once $GLOBALS['PLUGIN_ROOT'].'/Dropbox/OAuth/Storage/Session.php';
+include_once $GLOBALS['PLUGIN_ROOT'].'/Dropbox/OAuth/Consumer/ConsumerAbstract.php';
+include_once $GLOBALS['PLUGIN_ROOT'].'/Dropbox/OAuth/Consumer/Curl.php';
+include_once $GLOBALS['PLUGIN_ROOT'].'/Dropbox/API.php';
+include_once $GLOBALS['PLUGIN_ROOT'].'/Dropbox/Exception.php';
+global $xdata_key;
+global $xdata_secret;
+$xdata_key = 'sycky7f88q30pk5';
+$xdata_secret = 'unyj1i4x92ys75p';
+
+
+variable_set('mail_system', array('default-system' => 'MobiiappMailSystem'));
+
+/**
+* Modify the drupal mail system to send HTML emails.
+*/
+class MobiiappMailSystem implements MailSystemInterface {
+	/**
+	* Concatenate and wrap the e-mail body for plain-text mails.
+	*
+	* @param $message
+	*   A message array, as described in hook_mail_alter().
+	*
+	* @return
+	*   The formatted $message.
+	*/
+	public function format(array $message) {
+		$message['body'] = implode("\n\n", $message['body']);
+		return $message;
+	}
+
+	/**
+	* Send an e-mail message, using Drupal variables and default settings.
+	*
+	* @see <a href="http://php.net/manual/en/function.mail.php
+	" title="http://php.net/manual/en/function.mail.php
+	" rel="nofollow">http://php.net/manual/en/function.mail.php
+	</a>   * @see drupal_mail()
+	*
+	* @param $message
+	*   A message array, as described in hook_mail_alter().
+	* @return
+	*   TRUE if the mail was successfully accepted, otherwise FALSE.
+	*/
+	public function mail(array $message) {
+		$mimeheaders = array();
+		foreach ($message['headers'] as $name => $value) {
+			$mimeheaders[] = $name . ': ' . mime_header_encode($value);
+		}
+		$line_endings = variable_get('mail_line_endings', MAIL_LINE_ENDINGS);
+		return mail(
+			$message['to'],
+			mime_header_encode($message['subject']),
+			// Note: e-mail uses CRLF for line-endings. PHP's API requires LF
+			// on Unix and CRLF on Windows. Drupal automatically guesses the
+			// line-ending format appropriate for your system. If you need to
+			// override this, adjust $conf['mail_line_endings'] in settings.php.
+			preg_replace('@\r?\n@', $line_endings, $message['body']),
+			// For headers, PHP's API suggests that we use CRLF normally,
+			// but some MTAs incorrectly replace LF with CRLF. See #234403.
+			join("\n", $mimeheaders)
+		);
+	}
+}
+
+
+class MetadataClient {	
+	function __construct() {
+		$this->socket = new TSocket('localhost', 9090);
+		$this->transport = new TBufferedTransport($this->socket, 1024, 1024);
+		$this->protocol = new TBinaryProtocol($this->transport);
+		$this->client = new MetadataServiceClient($this->protocol);
+    }
+	
+	/**
+	 * Get simbaxml by thrift way.
+	 */
+	public function convert_metadata($gener_simba) {
+		try {
+			$this->transport->open();
+			$this->client->ping();
+			$simbaxml = $this->client->convert_metadata($gener_simba);
+			$this->transport->close();
+			return $simbaxml;
+		}
+		catch (TException $tx) {
+			drupal_set_message('TException: '.$tx->getMessage()."\n");
+			mobiiapp_service_alert('metadata', $tx->getMessage());
+		}
+	}
+	
+	public function edit_metadata($srcMetadataset){
+		try {
+			$this->transport->open();
+			$this->client->ping();
+			$simbaxml = $this->client->editMetadata($srcMetadataset);
+			$this->transport->close();
+			return $simbaxml;
+		}
+		catch (TException $tx) {
+			drupal_set_message('TException: '.$tx->getMessage()."\n");
+			mobiiapp_service_alert('metadata', $tx->getMessage());
+		}
+	}
+}
+
+
+class DataClient {	
+	function __construct() {
+		$this->socket = new TSocket('localhost', 9091);
+		$this->transport = new TBufferedTransport($this->socket, 1024, 1024);
+		$this->protocol = new TBinaryProtocol($this->transport);
+		$this->client = new DataServiceClient($this->protocol);
+    }
+	
+	public function get_filters($srcQueryset) {
+		try {
+			$this->transport->open();
+			$this->client->ping();
+			$result = $this->client->get_filters($srcQueryset);
+			$this->transport->close();
+			return $result;
+		}
+		catch (TException $tx) {
+			drupal_set_message('TException: '.$tx->getMessage()."\n");
+			mobiiapp_service_alert('data', $tx->getMessage());
+		}
+	}
+	
+	public function get_requestXml($srcQueryset) {
+		try {
+			$this->transport->open();
+			$this->client->ping();
+			$result = $this->client->get_requestXml($srcQueryset);
+			$this->transport->close();
+			return $result;
+		}
+		catch (TException $tx) {
+			drupal_set_message('TException: '.$tx->getMessage()."\n");
+			mobiiapp_service_alert('data', $tx->getMessage());
+		}
+	}
+	
+	public function convert_data($srcDataset) {
+		try {
+			$this->transport->open();
+			$this->client->ping();
+			$result = $this->client->convert_data($srcDataset);
+			$this->transport->close();
+			return $result;
+		}
+		catch (TException $tx) {
+			drupal_set_message('TException: '.$tx->getMessage()."\n");
+			mobiiapp_service_alert('data', $tx->getMessage());
+		}
+	}
+}
+
+
+class ContentClient {	
+	function __construct() {
+		$this->socket = new TSocket('localhost', 9092);
+		$this->transport = new TBufferedTransport($this->socket, 1024, 1024);
+		$this->protocol = new TBinaryProtocol($this->transport);
+		$this->client = new ContentServiceClient($this->protocol);
+    }
+	
+	public function get_prompts_info($srcPromptsSet) {
+		try {
+			$this->transport->open();
+			$this->client->ping();
+			$result = $this->client->get_prompts_info($srcPromptsSet);
+			$this->transport->close();
+			return $result;
+		}
+		catch (TException $tx) {
+			drupal_set_message('TException: '.$tx->getMessage()."\n");
+			mobiiapp_service_alert('content', $tx->getMessage());
+		}
+	}
+	
+	public function get_report_info($srcReportSet) {
+		try {
+			$this->transport->open();
+			$this->client->ping();
+			$result = $this->client->get_report_info($srcReportSet);
+			$this->transport->close();
+			return $result;
+		}
+		catch (TException $tx) {
+			drupal_set_message('TException: '.$tx->getMessage()."\n");
+			mobiiapp_service_alert('content', $tx->getMessage());
+		}
+	}
+}
+
+
+function mobiiapp_service_alert($service, $error_message) {
+	$server = exec('hostname');
+	watchdog('mobiiapp', $service. ' service is down due to '. $error_message. ' at '. $server. '.');
+	
+	$module = 'mobiiapp';
+	$key = 'service_alert';
+	$language = language_default();
+	$send = true;
+	
+	$params = array();
+	$params['server'] = $server;
+	$params['service'] = $service;
+	$params['error_message'] = $error_message;
+	
+	$from = variable_get('site_mail', '');
+	$to = variable_get('site_mail', '');
+	
+	drupal_mail($module, $key, $to, $language, $params, $from, $send);
+}
+
+
+/**
+ * Implementation of hook_perm().
+ */
+function mobiiapp_permission() {
+	return array(
+		'design mobiiapp' => array(
+			'title' => t('Design Reports at Page'),
+			'description' => t('Allow users to design reports at page.'),
+		),
+		'admin mobiiapp' => array(
+			'title' => t('Administrate MobiiApp at Unit Level'),
+			'description' => t('Allow users to administrate MobiiApp at Unit Level.'),
+		),
+		'super admin mobiiapp' => array(
+			'title' => t('Administrate MobiiApp at System Level'),
+			'description' => t('Allow users to administrate MobiiApp at System Level.'),
+		),
+	);
+}
+
+
+/**
+ * implementation of hook_menu.
+ */
+function mobiiapp_menu() {
+	$items = array();
+
+	$items['mobiiapp'] = array(
+		'title' => t('MobiiApp'),
+		'position' => 'left',
+		'page callback' => 'system_admin_menu_block_page',
+		'access arguments' => array('admin mobiiapp'),
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module', 'system'),
+	);
+	
+	/**
+	 * Mobiiapp catalog menu. All the called functions are in the file of 'mobiiapp.catalog.inc'.
+	 */
+	$items['mobiiapp/catalog'] = array(
+		'title' => t('Catalog'),
+		'description' => t('A page is built at adaptor and published at "Catalog".  "Catalog" implements authorization by folder hierarchy with <a href="@mobiiapp_security_roles">roles</a>',
+							array('@mobiiapp_security_roles' => url('mobiiapp/security/roles'))),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_catalog_form'), 
+		'access arguments' => array('admin mobiiapp'), 
+		'file' => 'mobiiapp.catalog.inc',
+		'weight' => 1,
+    );  
+	$items['mobiiapp/catalog/list'] = array(
+		'title' => t('List'),
+		'type' => MENU_DEFAULT_LOCAL_TASK,		
+	);
+	$items['mobiiapp/catalog/edit'] = array(
+		'title' => t('Catalog Edit'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_catalog_edit'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/catalog/delete'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_catalog_delete_confirm'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/catalog/roles'] = array(
+		'title' => t('Assign roles for the folder/page'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_catalog_roles'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/catalog/comments'] = array(
+		'title' => t('Manage the comments of the page'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_catalog_comments'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/catalog/comments/delete'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_catalog_comments_delete_confirm'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/catalog/comments/image'] = array(
+		'title' => t('Comment Image'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_catalog_comments_image'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	
+
+	//mobiiapp security 
+	$items['mobiiapp/security'] = array(
+		'title' => t('Security'),
+		'description' => t('Each user has to register as authenticated user at system by him/herself first, and then request the administrator of the specific unit to <a href="@mobiiapp_security_users">join the group</a>.  Each user only belongs to a group.  Users are managed under <a href="@mobiiapp_security_roles">roles</a> for authorization or special permissions (admin, design).', 
+							array(
+								'@mobiiapp_security_users' => url('mobiiapp/security/users'),
+								'@mobiiapp_security_roles' => url('mobiiapp/security/roles'),
+							)
+						),
+		'position' => 'left',
+		'page callback' => 'system_admin_menu_block_page',
+		'access arguments' => array('admin mobiiapp'),
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module', 'system'),
+		'weight' => 2,
+	); 
+
+	/**
+	 * Mobiiapp security user menu. All the called functions are in the file of 'mobiiapp.security.inc'.
+	 */
+	$items['mobiiapp/security/user'] = array(
+		'title' => t('Users'),
+		'description' => t('Each user has to register as authenticated user at system by him/herself first, and then request the administrator of the specific unit to join the group.  Each user only belongs to a group.'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_security_user_form'), 
+		'access arguments' => array('admin mobiiapp'),
+		'file' => 'mobiiapp.security.inc',
+		'weight' => 1,
+	);
+	$items['mobiiapp/security/user/add'] = array(
+		'title' => t('Add User'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_security_user_add'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/security/user/edit'] = array(
+		'title' => t('Edit User'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_security_user_edit'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['mobiiapp/security/user/delete'] = array(
+		'title' => t('Delete User'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_security_user_delete_confirm'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	/**
+	 * Mobiiapp security role menu. All the called functions are in the file of 'mobiiapp.security.inc'.
+	 */
+	$items['mobiiapp/security/roles'] = array(
+		'title' => t('Roles'),
+		'description' => t('Users are managed under roles for authorization or special permissions (admin, design).'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_security_role_form'), 
+		'access arguments' => array('admin mobiiapp'),
+		'file' => 'mobiiapp.security.inc',
+		'weight' => 2,
+	);
+	$items['mobiiapp/security/roles/list'] = array(
+		'title' => t('List'),
+		'type' => MENU_DEFAULT_LOCAL_TASK,
+		'weight' => -1,
+	);
+	
+	$items['mobiiapp/security/roles/edit'] = array(
+		'title' => t('Edit role'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_security_role_edit'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['mobiiapp/security/roles/delete'] = array(
+		'title' => t('Delete rule'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_security_role_delete_confirm'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	);	
+	$items['mobiiapp/security/user_register_unit'] = array(
+		'title' => t('Request to Create New Group/Join an Existed Group'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_security_user_register_unit'),
+		'access callback' => array('mobiiapp_security_user_register_unit_access'),
+		'type' => MENU_CALLBACK,
+	);
+
+	
+	/**
+	 * Mobiiapp unit menu. All the called functions are in the file of 'mobiiapp.unit.inc'.
+	 */
+	$items['mobiiapp/unit'] = array(
+		'title' => t('Group'),
+		'description' => t('Users within a group would share data and information of reports and communicate between each other to speedup decision making.'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_unit_form'),
+		'access arguments' => array('admin mobiiapp'),
+		'file' => 'mobiiapp.unit.inc',
+		'weight' => 3,
+	);
+	$items['mobiiapp/unit/add'] = array(
+		'title' => t('Add Group'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_unit_add'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('super admin mobiiapp'),
+	);
+	$items['mobiiapp/unit/delete'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_unit_delete_confirm'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('super admin mobiiapp'),
+	);
+	$items['mobiiapp/unit/edit'] = array(
+		'title' => t('Edit Group'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_unit_edit'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('super admin mobiiapp'),
+	);
+
+	
+	/**
+	 * Mobiiapp membership menu. All the called functions are in the file of 'mobiiapp.membership.inc'.
+	 */
+	/*
+	$items['mobiiapp/membership'] = array(
+		'title' => t('Membership'),
+		'description' => t('Subscribe/Manage memberships with <a href="@mobiiapp_security_users">users</a>.  An active membership can be allocated or removed from a user.',
+							array('@mobiiapp_security_users' => url('mobiiapp/security/user'))),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_membership_form'), 
+		'access arguments' => array('admin mobiiapp'), 
+		'file' => 'mobiiapp.membership.inc',
+		'weight' => 4,
+    );  
+	// $items['mobiiapp/membership/list'] = array(
+		// 'title' => t('List'),
+		// 'type' => MENU_DEFAULT_LOCAL_TASK,		
+	// );
+	$items['mobiiapp/membership/subscribe'] = array(
+		'title' => t('Subscribe'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_membership_subscribe'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/membership/subscribe_confirm'] = array(
+		'title' => t('Subscribe Membership Confirm'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_membership_subscribe_confirm'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/membership/history'] = array(
+		'title' => t('Subscribe History'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_membership_history'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/membership/assign'] = array(
+		'title' => t('Assign Membership'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_membership_assign'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/membership/delete'] = array(
+		'title' => t('Delete Membership'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_membership_delete_confirm'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/membership/extend'] = array(
+		'title' => t('Extend Membership'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_membership_extend'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/membership/extend_confirm'] = array(
+		'title' => t('Extend Membership Confirm'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_membership_extend_confirm'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['ipn_listener'] = array(
+		'title' => t('Paypal Live IPN Listener'),
+		'page callback' => 'mobiiapp_membership_ipn_listener',
+		'type' => MENU_CALLBACK,
+		'access callback' => True,
+	);
+	*/
+	
+	
+	/**
+	 * Mobiiapp membership menu. All the called functions are in the file of 'mobiiapp.membership.inc'.
+	 */
+	/*
+	$items['mobiiapp/bill'] = array(
+		'title' => t('Bill'),
+		'description' => t('View/Manage bills of <a href="@mobiiapp_membership">memberships</a>.',
+							array('@mobiiapp_membership' => url('mobiiapp/membership'))),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_bill_form'), 
+		'access arguments' => array('admin mobiiapp'), 
+		'file' => 'mobiiapp.bill.inc',
+		'weight' => 5,
+    );  
+	// $items['mobiiapp/bill/list'] = array(
+		// 'title' => t('List'),
+		// 'type' => MENU_DEFAULT_LOCAL_TASK,		
+	// );
+	$items['mobiiapp/bill/membership'] = array(
+		'title' => t('Bill Membership'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_bill_membership'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['mobiiapp/bill/delete'] = array(
+		'title' => t('Bill Delete'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mobiiapp_bill_delete_confirm'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	*/
+	
+	return $items;
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function mobiiapp_theme() {
+	return array(
+		'mobiiapp_security_role_form' => array(
+			'render element' => 'form',
+			'file' => 'mobiiapp.security.inc',
+		),
+		'mobiiapp_catalog_list_form' => array(
+			'render element' => 'form',
+			'file' => 'mobiiapp.security.inc',
+		),
+	);
+}
+
+
+/**
+ * Implements hook_mail().
+ */
+function mobiiapp_mail($key, &$message, $params) {
+	// Each message is associated with a language, which may or may not be the
+	// current user's selected language, depending on the type of e-mail being
+	// sent. This $options array is used later in the t() calls for subject
+	// and body to ensure the proper translation takes effect.
+	$options = array(
+		'langcode' => $message['language']->language,
+	);
+	$message['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed';
+	
+	switch ($key) {
+	// Send a simple message from the contact form.
+		case 'comment_message':
+			$message['subject'] = t('E-mail sent from @site-name for comment posted', 
+									array('@site-name' => variable_get('site_name', 'MobiiApp')), 
+									$options);
+			$message['body'][] = mobiiapp_catalog_comment_msg($params);
+			break;
+		case 'register_message':
+			$message['subject'] = t('E-mail sent from @site-name for unit join request', 
+									array('@site-name' => variable_get('site_name', 'MobiiApp')), 
+									$options);
+			$message['body'][] = mobiiapp_user_register_add_msg(
+									t('@name(@mail) requests to join the group(@unit_name).', 
+										array(
+											'@name' => $params['name'], 
+											'@mail' => $params['mail'],
+											'@unit_name' => $params['unit_name'],
+										), 
+										$options)
+									);
+			break;
+		case 'user_add_message':
+			$message['subject'] = t('E-mail sent from @site-name for user added notice', 
+									array('@site-name' => variable_get('site_name', 'MobiiApp')), 
+									$options);
+			$message['body'][] = mobiiapp_user_register_add_msg(
+									t('@name(@mail) has beed added into unit(@unit_name).', 
+										array(
+											'@name' => $params['name'], 
+											'@mail' => $params['mail'],
+											'@unit_name' => $params['unit_name'],
+										), 
+										$options)
+									);
+			break;
+		case 'service_alert':
+			$message['subject'] = t('E-mail sent from @site-name for MobiiApp Alert', 
+									array('@site-name' => variable_get('site_name', 'MobiiApp')), 
+									$options);
+			$message['body'][] = t('MobiiApp Alert: @service service is down due to @error_message at @server.', 
+									array(
+										'@service' => $params['service'], 
+										'@error_message' => $params['error_message'],
+										'@server' => $params['server'],
+									),
+									$options);
+			break;
+	}
+}
+
+
+function mobiiapp_catalog_comment_msg($params) {
+	$comment_msg_template = 
+	'<html>
+		<head>
+		<style type="text/css">   
+		body
+		{
+		font-size:12px;
+		color:#000000;
+		background-color:#ffffff;
+		margin:0px;
+		}
+
+		body,p,h1,h2,h3,h4,table,td,th,ul,ol,textarea,input
+		{
+		font-size:12px;
+		font-family:verdana,helvetica,arial,sans-serif;
+		}
+
+		h1 {font-size:190%;margin-top:0px;font-weight:normal}
+		h2 {font-size:160%;margin-top:10px;margin-bottom:10px;font-weight:normal}
+		h3 {font-size:120%;font-weight:normal}
+		h4 {font-size:100%;}
+		h5 {font-size:90%;}
+		h6 {font-size:80%;}
+		table.reference
+		{
+		background-color:#ffffff;
+		border:1px solid #c3c3c3;
+		border-collapse:collapse;
+		width:100%;
+		}
+
+		.headerCell
+		{
+			font-weight: bold;
+		}
+
+		table.reference th
+		{
+		background-color:#e5eecc;
+		border:1px solid #c3c3c3;
+		padding:3px;
+		vertical-align:top;
+		text-align:left;
+		}
+
+		table.reference td 
+		{
+		border:1px solid #c3c3c3;
+		padding:3px;
+		vertical-align:top;
+		}
+		</style>
+
+		</head>
+		<body>
+		<div align="left"><img src="@logo"/></div><br/>
+		<br/>
+		<p>@name posted the following message for @page.</p>
+		<table class="reference">
+		<tr>
+			<td>Directory: </td><td>@directory_path</td>
+		</tr>
+		<tr>
+			<td>Comment: </td><td>@comment</td>
+		</tr>
+		<tr>
+			<td valign="top">&nbsp;</td><td>@image</td>
+		</tr>
+		<tr><td colspan="2">&nbsp;</td></tr>
+		</table>
+		<p>Team MobiiApp</p>
+		</body>
+	</html>';
+	
+	$server = $_SERVER['SERVER_NAME'];
+	$logo = "https://$server/sites/default/files/mobiiapp_beta_logo.png";
+	$image = ($params['image'] != '')? 
+		"https://$server/sites/default/files/comment_images/". $params['image']: null;
+	
+	$comment_msg = t($comment_msg_template,
+						array(
+							'@logo' => $logo,
+							'@name' => $params['name'],
+							'@page' => $params['page'],
+							'@directory_path' => $params['directory_path'],
+							'@comment' => $params['message'],
+						)
+					);
+	
+	$img_src = ($image != null)? '<img src="'. $image. '"/>': '&nbsp;';
+	$comment_msg = str_replace('@image', $img_src, $comment_msg);
+	
+	return $comment_msg;
+}
+
+
+function mobiiapp_user_register_add_msg($msg) {
+	$user_register_add_msg_template = 
+	'<html>
+		<head>
+		<style type="text/css">   
+		body
+		{
+		font-size:12px;
+		color:#000000;
+		background-color:#ffffff;
+		margin:0px;
+		}
+
+		body,p,h1,h2,h3,h4,table,td,th,ul,ol,textarea,input
+		{
+		font-size:12px;
+		font-family:verdana,helvetica,arial,sans-serif;
+		}
+
+		h1 {font-size:190%;margin-top:0px;font-weight:normal}
+		h2 {font-size:160%;margin-top:10px;margin-bottom:10px;font-weight:normal}
+		h3 {font-size:120%;font-weight:normal}
+		h4 {font-size:100%;}
+		h5 {font-size:90%;}
+		h6 {font-size:80%;}
+		table.reference
+		{
+		background-color:#ffffff;
+		border:1px solid #c3c3c3;
+		border-collapse:collapse;
+		width:100%;
+		}
+
+		.headerCell
+		{
+			font-weight: bold;
+		}
+
+		table.reference th
+		{
+		background-color:#e5eecc;
+		border:1px solid #c3c3c3;
+		padding:3px;
+		vertical-align:top;
+		text-align:left;
+		}
+
+		table.reference td 
+		{
+		border:1px solid #c3c3c3;
+		padding:3px;
+		vertical-align:top;
+		}
+		</style>
+
+		</head>
+		<body>
+		<div align="left"><img src="@logo"/></div><br/>
+		<br/>
+		<p>Hi</p>
+		<p>@msg</p>
+		<br/>
+		<p>Team MobiiApp</p>
+		</body>
+	</html>';
+	
+	$server = $_SERVER['SERVER_NAME'];
+	$logo = "https://$server/sites/default/files/mobiiapp_beta_logo.png";
+	
+	$user_register_add_msg = t($user_register_add_msg_template,
+						array(
+							'@logo' => $logo,
+							'@msg' => $msg,
+						)
+					);
+	
+	return $user_register_add_msg;
+}
+
+
+/**
+ * Implements hook_user_login().
+ */
+function mobiiapp_user_login(&$edit, $account) {
+	if (!is_super_admin_mobiiapp($account->roles)) {
+		$query = 'SELECT count(*) 
+					FROM {mobiiapp_units_users_v} mcuv 
+					WHERE mcuv.uid = :uid';
+		$in_unit = db_query($query, array(':uid' => $account->uid))->fetchField();
+		if ($in_unit != 0) {
+			drupal_set_message(t('Launch <a href="webapp">MobiiApp WebApp</a>, <a href="http://itunes.apple.com/us/app/mobiiapp/id538206293?mt=8">MobiiApp iOS App</a><img src="/sites/default/files/common/iphone.png" alt=""><img src="/sites/default/files/common/ipad.png" alt="">, <a href="https://play.google.com/store/apps/details?id=mobiiapp.softmaster.us#?t=W251bGwsMSwyLDIxMiwibW9iaWlhcHAuc29mdG1hc3Rlci51cyJd">MobiiApp Android App</a><img src="/sites/default/files/common/android.png" alt=""> or MobiiApp Kindle App to access your data.'));
+		}
+	}
+}
+
+
+function get_adaptors() {
+	$result = db_query("select s.value from {mobiiapp_common} s where s.variable = 'adaptor';");
+	
+	$adaptors = array();
+	foreach ($result as $record) {
+		$adaptors[] = $record->value;
+	}
+	
+	return $adaptors;
+}
+
+
+function get_servers() {
+	$result = db_query("select s.value from {mobiiapp_common} s where s.variable = 'server';");
+	
+	$servers = array();
+	foreach ($result as $record) {
+		$servers[] = $record->value;
+	}
+	
+	return $servers;
+}
+?>

@@ -1,0 +1,240 @@
+<?php
+
+
+/**
+* Implementation of hook_install().
+*/
+function obiee10g_adaptor_install() {
+	drupal_install_schema('obiee10g_adaptor_page');
+	drupal_install_schema('obiee10g_adaptor_interface');
+	db_query("create view obiee10g_adaptor_page_list_v as 
+				select c.cid, c.name, c.status, i.name as interface_name, i.id as interface_id, c.unit_id 
+				from obiee10g_adaptor_page c, 
+					obiee10g_adaptor_interface i 
+				where c.interface_id = i.id
+				and c.type = 'page'
+				order by c.cid, c.name, i.name;");
+	db_insert('mobiiapp_common')->fields(array('variable' => 'adaptor', 'value' => 'obiee10g'))->execute();
+}
+
+
+/**
+* Implementation of hook_uninstall().
+*/
+function obiee10g_adaptor_uninstall() {
+	db_delete('mobiiapp_common')
+		->condition('variable', 'adaptor')
+		->condition('value', 'obiee10g')
+		->execute();
+	db_query('drop view obiee10g_adaptor_page_list_v;');
+	drupal_uninstall_schema('obiee10g_adaptor_page');	
+	drupal_uninstall_schema('obiee10g_adaptor_interface');	
+}
+
+
+/**
+* Implementation of hook_schema().
+*/
+function obiee10g_adaptor_schema() {
+		
+    $schema['obiee10g_adaptor_page'] = array(
+	    'description' => t("OBIEE10g adaptor page information."),
+		'fields' => array(            
+		    'cid' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+			'fid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => FALSE,
+				'default' => 0,
+				'description' => t("Foreign key."),
+			),
+			'obieepath' => array(
+                'description' => 'The obiee path.',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => '',
+            ),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'description' => t("name."),
+			),			
+			'type' => array(
+			    'description' => t("Type."),
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => FALSE,
+			),	
+			'status' => array(
+                'description' => 'Boolean indicating whether the dashboard page simbaxml is generated .',
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+			'requestxml' => array(
+				'type' => 'text',
+				'size' => 'big',
+				'not null' => TRUE,
+				'description' => t('OBIEE Report Request XMLs.'),
+			),
+			'simbaxml' => array(
+				'type' => 'text',
+				'size' => 'big',
+				'not null' => FALSE,
+				'description' => t('Simba XMLs.'),
+			),
+			'interface_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {obiee10g_adaptor_interface}.id for interfaces.',
+			),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {mobiiapp}.unit_id for units.',
+			),
+			'timestamp' => array(
+				'description' => 'The most recent time the item has been updated.',
+			    'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+			),
+		),
+		'primary key' => array('cid')
+	);
+	
+	
+	$schema['obiee10g_prompt_filter_values'] = array(
+	    'description' => t("Store information."),
+	    'fields' => array( 
+	        'id' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+			
+		    'filter_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'description' => t("filter_id."),
+			),
+           'filter_value' => array(
+                'description' => 'The filter value.',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => '',
+            ),
+			'refresh_date' => array(
+                'description' => 'The refresh time.',
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+		),
+		
+		'primary key' => array('id'),
+			
+	);
+	
+	
+    $schema['obiee10g_prompt_filters'] = array(
+	    'description' => t("Store information."),
+	    'fields' => array( 
+	        'id' => array(
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'description' => t("Primary Key."),
+			),
+			'cid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'description' => t("controller_id."),
+			),
+			'filter_formula' => array(
+                'description' => 'The formula.',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => '',
+            ),
+			'create_date' => array(
+                'description' => 'The create time.',
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+		),
+		
+		'primary key' => array('id'),			
+	);	
+		
+	$schema['obiee10g_adaptor_interface'] = array(
+		'description' => 'OBIEE10g adaptor interface information.',
+		'fields' => array(
+			'id' => array(
+			    'type' => 'serial',
+			    'unsigned' => TRUE,
+			    'not null' => TRUE,
+			    'description' => t("Primary Key."),
+		    ),
+			'name' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("The name of connection."),
+			),
+			'url' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'not null' => TRUE,
+				'description' => t("The source url of report."),
+			),
+			
+			'username' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("Database account name."),
+			),
+			'passwd' => array(
+				'type' => 'varchar',
+				'length' => 32,
+				'not null' => TRUE,
+				'description' => t("Database account password."),
+			),
+			'unit_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Primary Key: {mobiiapp}.unit_id for units.',
+			),
+			
+		),
+		
+		'primary key' => array('id'),
+	);
+	
+	return $schema;
+}
+
+?>

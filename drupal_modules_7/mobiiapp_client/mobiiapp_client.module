@@ -1,0 +1,124 @@
+<?php
+require_once('mobiiapp.client.inc');
+// require_once $GLOBALS['PLUGIN_ROOT'].'/packages/dataservice/DataService.php';
+// require_once $GLOBALS['PLUGIN_ROOT'].'/packages/contentservice/ContentService.php';
+
+/**
+ *implementation of hook_menu.
+**/
+function mobiiapp_client_menu() {
+	$items = array();
+	
+	/**
+	 * Mobiiapp app client interaction menu. All the called functions are in the file of 'mobiiapp.client.inc'.
+	**/
+	$items['client'] = array(
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'title' => 'Client',
+		'description' => 'Mobiiapp Client Interaction.',
+		'page callback' => 'system_admin_menu_block_page',
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module', 'system'),
+	);
+	
+	
+	$items['client/login'] = array(
+		'page callback' => 'mobiiapp_client_login',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/signup'] = array(
+		'page callback' => 'mobiiapp_client_signup',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/joingroup'] = array(
+		'page callback' => 'mobiiapp_client_joingroup',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/logout'] = array(
+		'page callback' => 'mobiiapp_client_logout',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/validate'] = array(
+		'page callback' => 'mobiiapp_client_validate',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/passwordreset'] = array(
+		'page callback' => 'mobiiapp_client_passwordreset',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/loadmenu'] = array(
+		'page callback' => 'mobiiapp_client_loadmenu',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/loaddata'] = array(
+		'page callback' => 'mobiiapp_client_loaddata',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/loadcomments'] = array(
+		'page callback' => 'mobiiapp_client_load_comments',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/submitcomment'] = array(
+		'page callback' => 'mobiiapp_client_submit_comment',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/loadtickets'] = array(
+		'page callback' => 'mobiiapp_client_load_tickets',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/submitticket'] = array(
+		'page callback' => 'mobiiapp_client_submit_ticket',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/submitticketcomment'] = array(
+		'page callback' => 'mobiiapp_client_submit_ticketcomment',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['client/loadunit'] = array(
+		'page callback' => 'mobiiapp_client_load_units',
+		// 'access callback' => 'user_is_logged_in',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	return $items;
+}
+?>
+

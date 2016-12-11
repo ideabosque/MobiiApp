@@ -1,0 +1,7 @@
+; $Id$
+name = xData Adaptor
+description = Manage xData Adaptor.
+package = MOBIIAPP
+core = 7.x
+dependencies[] = mobiiapp
+version = "7.x-0.1"

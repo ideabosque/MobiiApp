@@ -1,0 +1,248 @@
+<?php
+
+require_once('xdata.interface.inc');
+require_once('xdata.dataset.inc');
+require_once('xdata.page.inc');
+
+/**
+implementation of hook_menu.
+ */
+function xdata_adaptor_menu() {
+	$items = array();
+
+	$items['xdata_adaptor'] = array(
+		'title' => t('xData Adaptor'),
+		'position' => 'left',
+		'page callback' => 'system_admin_menu_block_page',
+		'access arguments' => array('admin mobiiapp'),
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module', 'system'),
+	);
+	
+	//xData adaptor's page
+	$items['xdata_adaptor/page'] = array(
+        'title' => t('Page'),
+        'description' => t('A page is built with reports and prompts with <a href="@xdata_adaptor_dataset">xData Adaptor Dataset</a> and published at <a href="@mobiiapp_catalog">MobiiApp Catalog</a>.', 
+							array('@xdata_adaptor_dataset' => url('xdata_adaptor/dataset'),
+									'@mobiiapp_catalog' => url('mobiiapp/catalog'))),
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('xdata_page_form'), 
+        'access arguments' => array('admin mobiiapp'),
+     	'file' => 'xdata.page.inc',
+		'weight' => 1,
+    ); 
+    $items['xdata_adaptor/page/edit'] = array(
+        'title' => t('Page Information'),
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('xdata_page_edit'),
+		'access arguments' => array('admin mobiiapp'),
+        'type' => MENU_CALLBACK,
+    );	
+	$items['xdata_adaptor/page/delete'] = array(
+		'title' => t('Delete'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_page_delete_confirm'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['xdata_adaptor/page/clone'] = array(
+        'title' => t('Clone Page'),
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('xdata_page_clone'),
+        'type' => MENU_CALLBACK,
+        'access arguments' => array('admin mobiiapp'),
+    );	
+	$items['xdata_adaptor/page/display'] = array(
+        'title' => t('Prompts and Reports'),
+        'description' => 'xData Page.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('xdata_page_display_form'), 
+		'type' => MENU_CALLBACK,
+        'access arguments' => array('admin mobiiapp'),
+    ); 
+	$items['xdata_adaptor/page/display/edit'] = array(
+		'title' => t('Edit Prompt/Report'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_page_display_edit'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['xdata_adaptor/page/display/prompt_filter/add'] = array(
+		'title' => t('Add Prompt Filter'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_page_display_prompt_filter_add'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['xdata_adaptor/page/display/prompt_filter/edit'] = array(
+		'title' => t('Edit Prompt Filter'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_page_display_prompt_filter_edit'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['xdata_adaptor/page/display/prompt_filter/default'] = array(
+		'title' => t('Set Prompt Filter Default Value'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_page_display_prompt_filter_default'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['xdata_adaptor/page/display/delete'] = array(
+		'title' => t('Add'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_page_display_delete_confirm'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['xdata_adaptor/page/display/download'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_page_display_download'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['xdata_adaptor/page/display/upload'] = array(
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_page_display_upload'),
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	
+	//xData Adaptor's Datasets
+	$items['xdata_adaptor/dataset'] = array(
+		'title' => t('Dataset'),
+		'description' => t('Here are three types of datasets, direct, remote (ssh, dropbox), and database (mysql, mssql and oracle).  <b>Excel2007/Excel2010, Excel5, Excel2003XML, OOCalc, SYLK, Gnumeric, CSV</b> are supported for direct and remote datasets.  A dataset is associated with an interface at <a href="@xdata_adaptor_interface">xData Adaptor Interface</a> except direct dataset.  Remote datasets can be scheduled to refresh by hourly, weekly or monthly.',
+							array('@xdata_adaptor_interface' => url('xdata_adaptor/interface'))),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_dataset_form'), 
+		'access arguments' => array('admin mobiiapp'), 
+		'file' => 'xdata.dataset.inc',
+		'weight' => 2,
+    );  
+	// $items['xdata_adaptor/dataset/list'] = array(
+		// 'title' => t('List'),
+		// 'type' => MENU_DEFAULT_LOCAL_TASK,
+		// 'weight' => -1,
+	// );
+	$items['xdata_adaptor/dataset/add'] = array(
+		'title' => t('Add Dataset'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_dataset_add'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['xdata_adaptor/dataset/edit'] = array(
+		'title' => t('Edit Dataset'),
+		'description' => 'Edit xData dataset condition.',
+		'page callback' => 'drupal_get_form',
+		'type' => MENU_CALLBACK,
+		'page arguments' => array('xdata_dataset_edit'), 
+		'access arguments' => array('admin mobiiapp'), 
+	); 
+	$items['xdata_adaptor/dataset/upload'] = array(
+		'title' => t('Upload Dataset'),
+		'description' => 'Upload dataset.',
+		'page callback' => 'drupal_get_form',
+		'type' => MENU_CALLBACK,
+		'page arguments' => array('xdata_dataset_upload'), 
+		'access arguments' => array('admin mobiiapp'), 
+	);
+	$items['xdata_adaptor/dataset/refresh'] = array(
+		'page callback' => 'xdata_dataset_refresh',
+		'access arguments' => array('admin mobiiapp'), 
+		'type' => MENU_CALLBACK,
+	);
+	$items['xdata_adaptor/dataset/remote_refresh'] = array(
+		'page callback' => 'xdata_dataset_remote_refresh',
+		'access callback' => 'xdata_dataset_remote_refresh_access',
+		'type' => MENU_CALLBACK,
+	);
+	$items['xdata_adaptor/dataset/schedule'] = array(
+		'title' => t('Edit Dataset refresh schedule'),
+		'description' => 'Edit dataset refresh schedule.',
+		'page callback' => 'drupal_get_form',
+		'type' => MENU_CALLBACK,
+		'page arguments' => array('xdata_dataset_schedule'), 
+		'access arguments' => array('admin mobiiapp'), 
+	);
+    $items['xdata_adaptor/dataset/delete'] = array(
+		'title' => t('Delete Dataset'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_dataset_delete_confirm'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	//xData Adaptor's Interfaces
+	$items['xdata_adaptor/interface'] = array(
+		'title' => t('Interface'),
+		'description' => t('Five types of interfaces, ssh (remote), dropbox (remote), mysql (database), mssql (database) and oracle (database), are supported.'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_interface_form'), 
+		'access arguments' => array('admin mobiiapp'), 
+		'file' => 'xdata.interface.inc',
+		'weight' => 3,
+    );  
+	// $items['xdata_adaptor/interface/list'] = array(
+		// 'title' => t('List'),
+		// 'type' => MENU_DEFAULT_LOCAL_TASK,
+		// 'weight' => -1,
+	// );
+	$items['xdata_adaptor/interface/add'] = array(
+		'title' => t('Add Interface'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_interface_add'), 
+		'type' => MENU_CALLBACK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['xdata_adaptor/interface/edit'] = array(
+		'title' => t('Edit Interface'),
+		'description' => 'Edit xData interface connection.',
+		'page callback' => 'drupal_get_form',
+		'type' => MENU_CALLBACK,
+		'page arguments' => array('xdata_interface_edit'), 
+		'access arguments' => array('admin mobiiapp'), 
+	); 
+    $items['xdata_adaptor/interface/delete'] = array(
+		'title' => t('Delete Interface'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('xdata_interface_delete_confirm'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['xdata_adaptor/interface/add_dropbox'] = array(
+		'page callback' => 'xdata_interface_add_dropbox',
+		'access arguments' => array('admin mobiiapp'), 
+		'type' => MENU_CALLBACK,
+	);
+	
+	return $items;
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function xdata_adaptor_theme() {
+	return array(
+		'xdata_page_list_form' => array(
+			'render element' => 'form',
+			'file' => 'xdata.page.inc',
+		),
+		
+	);
+}
+
+/**
+ * Implements hook_cron().
+ */
+function xdata_adaptor_cron() {
+	xdata_dataset_schedule_refresh('hourly');
+	
+	if (date('H', time()) == '00') {
+		xdata_dataset_schedule_refresh('daily');
+		xdata_dataset_schedule_refresh('weekly');
+		xdata_dataset_schedule_refresh('monthly');
+	}
+}	
+?>

@@ -1,0 +1,111 @@
+<?php
+
+require_once('obiee11g.interface.inc');
+require_once('obiee11g.page.inc');
+
+
+/**
+implementation of hook_menu.
+ */
+function obiee11g_adaptor_menu() {
+	$items = array();
+
+	$items['obiee11g_adaptor'] = array(
+		'title' => 'OBIEE11g Adaptor',
+		'position' => 'left',
+		'page callback' => 'system_admin_menu_block_page',
+		'access arguments' => array('admin mobiiapp'),
+		'file' => 'system.admin.inc',
+		'file path' => drupal_get_path('module', 'system'),
+	);
+	
+	//OBIEE11g adaptor's page
+	$items['obiee11g_adaptor/page'] = array(
+        'title' => 'Page',
+        'description' => 'OBIEE11g Page.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('obiee11g_page_form'), 
+        'access arguments' => array('admin mobiiapp'),
+     	'file' => 'obiee11g.page.inc',  
+    ); 
+    $items['obiee11g_adaptor/page/edit'] = array(
+        'title' => 'Page Information',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('obiee11g_page_edit'),
+        'type' => MENU_CALLBACK,
+        'access arguments' => array('admin mobiiapp'),
+    );	
+	$items['obiee11g_adaptor/page/delete'] = array(
+		'title' => 'Delete',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('obiee11g_page_delete_confirm'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	); 
+	$items['obiee11g_adaptor/page/display'] = array(
+		'title' => 'Prompts and Reports',
+	    'description' => 'Prompts and reports of obiee11g page.',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('obiee11g_page_display_form'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	); 
+	
+	
+	//obiee11g adaptor interface's settings
+	$items['obiee11g_adaptor/interface'] = array(
+		'title' => 'Interface',
+		'description' => 'Set OBIEE11g interface connection.',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('obiee11g_interface_form'), 
+		'access arguments' => array('admin mobiiapp'), 
+		'file' => 'obiee11g.interface.inc',
+    );  
+	$items['obiee11g_adaptor/interface/list'] = array(
+		'title' => 'List',
+		'type' => MENU_DEFAULT_LOCAL_TASK,
+		'weight' => -11,
+	);
+	$items['obiee11g_adaptor/interface/add'] = array(
+		'title' => 'Add',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('obiee11g_interface_add'), 
+		'type' => MENU_LOCAL_TASK,
+		'access arguments' => array('admin mobiiapp'),
+	);
+	$items['obiee11g_adaptor/interface/edit'] = array(
+		'title' => 'Edit Interface',
+		'description' => 'Edit OBIEE11g interface connection.',
+		'page callback' => 'drupal_get_form',
+		'type' => MENU_CALLBACK,
+		'page arguments' => array('obiee11g_interface_edit'), 
+		'access arguments' => array('admin mobiiapp'), 
+	); 
+    $items['obiee11g_adaptor/interface/delete'] = array(
+		'title' => 'Delete',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('obiee11g_interface_delete_confirm'),
+		'access arguments' => array('admin mobiiapp'),
+		'type' => MENU_CALLBACK,
+	);	
+	
+	return $items;
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function obiee11g_adaptor_theme() {
+	return array(
+		'obiee11g_page_list_form' => array(
+			'render element' => 'form',
+			'file' => 'obiee11g.page.inc',
+		),
+		
+	);
+}
+
+
+	
+?>

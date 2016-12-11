@@ -1,0 +1,32 @@
+#!/usr/local/bin/python2.7
+#chkconfig: 345 99 10
+#description: SIMBA Content Service.
+
+import sys, time, syslog
+sys.path.append('/opt/thrift/contentservice/')
+
+from simba.contentdaemon import ContentDaemon
+
+
+if __name__ == "__main__":
+    daemon = ContentDaemon('/tmp/ContentDaemon.pid')
+    if len(sys.argv) == 2:
+        if 'start' == sys.argv[1]:
+            print 'Starting SIMBA Content Service...'
+            syslog.syslog('Starting SIMBA Content Service...')
+            daemon.start()
+        elif 'stop' == sys.argv[1]:
+            print 'Stopping SIMBA Content Service...'
+            syslog.syslog('Stopping SIMBA Content Service...')
+            daemon.stop()
+        elif 'restart' == sys.argv[1]:
+            print 'Restarting SIMBA Content Service...'
+            syslog.syslog('Restarting SIMBA Content Service...')
+            daemon.restart()
+        else:
+            print "Unknown command"
+            sys.exit(2)
+            sys.exit(0)
+    else:
+        print "usage: %s start|stop|restart" % sys.argv[0]
+        sys.exit(2)
